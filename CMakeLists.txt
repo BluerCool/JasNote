@@ -7,25 +7,27 @@ set(CMAKE_AUTOMOC ON)
 
 find_package(Qt6 REQUIRED COMPONENTS Widgets Core Gui Test)
 
-include(FetchContent)
-FetchContent_Declare(Qlementine
-    GIT_REPOSITORY "https://github.com/oclero/qlementine.git"
-    GIT_TAG "v1.4.2"
-)
-set(QLEMENTINE_BUILD_TESTS OFF CACHE BOOL "" FORCE)
-set(QLEMENTINE_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
-FetchContent_MakeAvailable(Qlementine)
-
 add_executable(jasnote
     src/main.cpp
     src/mainwindow.cpp
     src/markdowneditor.cpp
+    src/glassdialog.cpp
+    src/titlebar.cpp
+    src/config.cpp
 )
-target_link_libraries(jasnote PRIVATE Qt6::Widgets Qt6::Core Qt6::Gui qlementine)
+target_link_libraries(jasnote PRIVATE
+    Qt6::Widgets Qt6::Core Qt6::Gui
+)
+install(TARGETS jasnote DESTINATION bin)
 
 add_executable(jasnote_test
     tests/test_mainwindow.cpp
     src/mainwindow.cpp
     src/markdowneditor.cpp
+    src/glassdialog.cpp
+    src/titlebar.cpp
+    src/config.cpp
 )
-target_link_libraries(jasnote_test PRIVATE Qt6::Widgets Qt6::Core Qt6::Gui Qt6::Test qlementine)
+target_link_libraries(jasnote_test PRIVATE
+    Qt6::Widgets Qt6::Core Qt6::Gui Qt6::Test
+)

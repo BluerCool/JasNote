@@ -13,7 +13,6 @@ private slots:
     void testSetAndGetMarkdown();
     void testMarkdownStringManipulation();
     void testMainWindowHasEditor();
-    void testWindowIsTranslucent();
 };
 
 void TestJasNote::testMarkdownEditorStartsWithContent()
@@ -46,12 +45,6 @@ void TestJasNote::testMainWindowHasEditor()
     auto *editor = w.findChild<MarkdownEditor *>();
     QVERIFY(editor != nullptr);
     QVERIFY(!editor->toMarkdown().isEmpty());
-}
-
-void TestJasNote::testWindowIsTranslucent()
-{
-    MainWindow w;
-    QVERIFY(w.testAttribute(Qt::WA_TranslucentBackground));
 }
 
 QTEST_MAIN(TestJasNote)

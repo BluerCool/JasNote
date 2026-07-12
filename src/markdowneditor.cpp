@@ -1,124 +1,230 @@
 #include "markdowneditor.h"
-#include <QTextEdit>
-#include <QTextBrowser>
-#include <QSplitter>
-#include <QVBoxLayout>
-#include <QPainter>
-#include <QPainterPath>
-#include <QLinearGradient>
+#include "settings.h"
+#include <QKeyEvent>
+#include <QMimeData>
+#include <QImage>
+#include <QImageReader>
+#include <QUrl>
+#include <QDir>
+#include <QDateTime>
+#include <QFileInfo>
+#include <QFile>
+#include <QGuiApplication>
+#include <QClipboard>
+#include <QTextCursor>
+#include <QTextDocument>
+#include <QTextImageFormat>
+#include <QTextBlock>
+#include <QAbstractTextDocumentLayout>
+#include <QScrollBar>
+#include <QTimer>
 
-MarkdownEditor::MarkdownEditor(QWidget *parent)
-    : QWidget(parent)
+MarkdownEditor::MarkdownEditor(const QString &filePath, QWidget *parent)
+    : QTextEdit(parent)
 {
-    auto *layout = new QVBoxLayout(this);
-    layout->setContentsMargins(0, 0, 0, 0);
+    setObjectName("markdownEditor");
+    setLineWrapMode(QTextEdit::WidgetWidth);
+    setTabStopDistance(S::ED_TAB_STOP);
+    setAcceptRichText(true);
 
-    m_splitter = new QSplitter(Qt::Horizontal, this);
+    setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 
-    m_edit = new QTextEdit(this);
-    m_edit->setPlaceholderText("Start writing markdown...");
-    m_edit->setFrameShape(QFrame::NoFrame);
-    m_edit->setStyleSheet(R"(
-        QTextEdit {
-            background-color: rgba(28, 32, 40, 190);
-            color: #d4d4dc;
-            border: none;
-            font-family: 'Cascadia Code', 'Fira Code', 'JetBrains Mono', monospace;
-            font-size: 14px;
-            padding: 16px;
-            selection-background-color: #2a6f6f;
-            selection-color: white;
-        }
-    )");
+    QFont font(S::ED_FONT, S::ED_FONT_SIZE);
+    setFont(font);
 
-    m_preview = new QTextBrowser(this);
-    m_preview->setFrameShape(QFrame::NoFrame);
-    m_preview->setStyleSheet(R"(
-        QTextBrowser {
-            background-color: rgba(28, 32, 40, 170);
-            color: #d4d4dc;
-            border: none;
-            font-family: 'Segoe UI', 'Noto Sans', sans-serif;
-            font-size: 14px;
-            padding: 16px;
-            selection-background-color: #2a6f6f;
-            selection-color: white;
-        }
-    )");
+    setStyleSheet(
+        QString(
+            "QTextEdit {"
+            "  background-color: transparent;"
+            "  color: %1;"
+            "  border: none;"
+            "  padding: %2px;"
+            "  selection-background-color: %3;"
+            "  selection-color: white;"
+            "}"
+            "QScrollBar { width: 0px; height: 0px; }"
+        ).arg(S::ED_COLOR).arg(S::ED_PADDING).arg(S::ED_SEL_BG)
+    );
 
-    m_preview->document()->setDefaultStyleSheet(R"(
-        body { color: #d4d4dc; font-family: 'Segoe UI', sans-serif; font-size: 14px; line-height: 1.6; margin: 0; }
-        h1, h2, h3, h4 { color: #4ec9b0; }
-        h1 { border-bottom: 1px solid rgba(78, 201, 176, 0.3); padding-bottom: 8px; }
-        h2 { border-bottom: 1px solid rgba(78, 201, 176, 0.2); padding-bottom: 4px; }
-        code { background: rgba(78, 201, 176, 0.15); color: #b5cea8; padding: 2px 6px; border-radius: 4px; font-family: 'Cascadia Code', monospace; }
-        pre { background: rgba(0, 0, 0, 0.3); padding: 16px; border-radius: 8px; border-left: 3px solid #4ec9b0; }
-        blockquote { border-left: 3px solid #4ec9b0; margin: 0; padding: 4px 16px; background: rgba(78, 201, 176, 0.05); }
+    document()->setDefaultStyleSheet(R"(
+        body { color: #d4d4dc; }
+        h1 { font-size: 26px; color: #e8e8ec; font-weight: bold; margin-top: 18px; margin-bottom: 10px; }
+        h2 { font-size: 21px; color: #e0e0e6; font-weight: bold; margin-top: 16px; margin-bottom: 8px; }
+        h3 { font-size: 17px; color: #d8d8de; font-weight: bold; margin-top: 14px; margin-bottom: 6px; }
+        h4 { font-size: 15px; color: #d4d4dc; font-weight: bold; margin-top: 12px; margin-bottom: 4px; }
+        h5, h6 { font-size: 14px; color: #c0c0c8; font-weight: bold; margin-top: 10px; margin-bottom: 4px; }
+        code { font-family: 'Cascadia Code', 'Fira Code', monospace; background: rgba(255,255,255,0.08); padding: 2px 5px; border-radius: 4px; font-size: 13px; }
+        pre { background: rgba(255,255,255,0.06); padding: 14px; border-radius: 8px; margin: 10px 0; }
+        pre code { background: transparent; padding: 0; font-size: 13px; }
         a { color: #4ec9b0; text-decoration: none; }
         a:hover { text-decoration: underline; }
-        table { border-collapse: collapse; width: 100%; }
-        th, td { border: 1px solid rgba(78, 201, 176, 0.2); padding: 8px 12px; text-align: left; }
-        th { background: rgba(78, 201, 176, 0.1); }
-        hr { border: none; border-top: 1px solid rgba(78, 201, 176, 0.2); }
+        blockquote { border-left: 3px solid #4ec9b0; padding-left: 14px; color: rgba(212,212,220,0.6); margin: 8px 0; }
+        hr { border: none; border-top: 1px solid rgba(255,255,255,0.12); margin: 18px 0; }
+        table { border-collapse: collapse; margin: 10px 0; }
+        th { background: rgba(255,255,255,0.08); font-weight: bold; }
+        th, td { border: 1px solid rgba(255,255,255,0.15); padding: 7px 14px; }
+        ul, ol { margin: 4px 0; }
+        li { margin: 3px 0; }
+        img { max-width: 100%; border-radius: 6px; }
     )");
 
-    m_splitter->addWidget(m_edit);
-    m_splitter->addWidget(m_preview);
-    m_splitter->setStretchFactor(0, 1);
-    m_splitter->setStretchFactor(1, 1);
-    m_splitter->setHandleWidth(4);
-    m_splitter->setStyleSheet(R"(
-        QSplitter::handle {
-            background: rgba(78, 201, 176, 80);
-            border-radius: 2px;
+    m_pasteDir = QDir::currentPath() + "/pastes";
+    QDir().mkpath(m_pasteDir);
+
+    if (filePath.isEmpty()) {
+        m_filePath = QDir::currentPath() + "/markdowns/note.md";
+    } else {
+        m_filePath = QFileInfo(filePath).absoluteFilePath();
+    }
+
+    m_saveTimer = new QTimer(this);
+    m_saveTimer->setSingleShot(true);
+    m_saveTimer->setInterval(S::ED_AUTOSAVE_MS);
+    if (S::ED_AUTOSAVE_MS > 0)
+        connect(m_saveTimer, &QTimer::timeout, this, &MarkdownEditor::autoSave);
+
+    QFile file(m_filePath);
+    if (file.exists() && file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        QString content = QString::fromUtf8(file.readAll());
+        file.close();
+        setMarkdown(content);
+    } else {
+        setMarkdown("# Welcome to JasNote\n\nPaste images with Ctrl+V or drag & drop files.");
+    }
+
+    connect(this, &QTextEdit::textChanged, this, [this]() {
+        if (!m_loading) {
+            if (!m_modified) {
+                m_modified = true;
+                emit modificationChanged(true);
+            }
+            emit textChanged(toMarkdown());
+            if (S::ED_AUTOSAVE_MS > 0)
+                m_saveTimer->start();
         }
-        QSplitter::handle:hover {
-            background: rgba(78, 201, 176, 180);
-        }
-    )");
-
-    layout->addWidget(m_splitter);
-
-    connect(m_edit, &QTextEdit::textChanged, this, &MarkdownEditor::updatePreview);
-
-    setMarkdown("# Welcome to JasNote\n\nEdit markdown on the left. **Preview** updates live on the right.\n\n## Features\n\n- Split-pane editor & preview\n- Frosted glass design\n- Live markdown rendering\n- Teal accent theme\n\n> Write beautifully.");
-}
-
-void MarkdownEditor::paintEvent(QPaintEvent *)
-{
-    QPainter p(this);
-    p.setRenderHint(QPainter::Antialiasing);
-
-    QPainterPath path;
-    path.addRoundedRect(rect(), 12, 12);
-    p.setClipPath(path);
-
-    QLinearGradient g(0, 0, 0, height());
-    g.setColorAt(0.0, QColor(78, 201, 176, 10));
-    g.setColorAt(0.5, QColor(78, 201, 176, 0));
-    g.setColorAt(1.0, QColor(78, 201, 176, 5));
-    p.fillRect(rect(), g);
-
-    QLinearGradient eg(0, 0, width(), 0);
-    eg.setColorAt(0.0, QColor(255, 255, 255, 0));
-    eg.setColorAt(0.5, QColor(255, 255, 255, 10));
-    eg.setColorAt(1.0, QColor(255, 255, 255, 0));
-    p.setPen(QPen(eg, 1));
-    p.drawRoundedRect(QRectF(rect()).adjusted(0.5, 0.5, -0.5, -0.5), 12, 12);
+    });
 }
 
 QString MarkdownEditor::toMarkdown() const
 {
-    return m_edit->toPlainText();
+    QString md = document()->toMarkdown();
+    while (md.endsWith('\n')) {
+        md.chop(1);
+    }
+    return md;
 }
 
 void MarkdownEditor::setMarkdown(const QString &md)
 {
-    m_edit->setPlainText(md);
-    updatePreview();
+    m_loading = true;
+    document()->setMarkdown(md);
+    m_loading = false;
 }
 
-void MarkdownEditor::updatePreview()
+void MarkdownEditor::save()
 {
-    m_preview->setMarkdown(m_edit->toPlainText());
+    QDir().mkpath(QFileInfo(m_filePath).absolutePath());
+    QFile file(m_filePath);
+    if (file.open(QIODevice::WriteOnly | QIODevice::Text)) {
+        file.write(toMarkdown().toUtf8());
+        file.close();
+    }
+    if (m_modified) {
+        m_modified = false;
+        emit modificationChanged(false);
+    }
+}
+
+void MarkdownEditor::autoSave()
+{
+    save();
+}
+
+QString MarkdownEditor::filePath() const
+{
+    return m_filePath;
+}
+
+QString MarkdownEditor::fileName() const
+{
+    return QFileInfo(m_filePath).fileName();
+}
+
+bool MarkdownEditor::handlePaste()
+{
+    const QMimeData *mimeData = QGuiApplication::clipboard()->mimeData();
+    if (!mimeData)
+        return false;
+
+    if (mimeData->hasImage()) {
+        insertFromMimeData(mimeData);
+        return true;
+    }
+
+    return false;
+}
+
+void MarkdownEditor::keyPressEvent(QKeyEvent *event)
+{
+    if (event->key() == Qt::Key_Tab) {
+        insertPlainText("    ");
+        return;
+    }
+
+    if (event->key() == Qt::Key_S && (event->modifiers() & Qt::ControlModifier)) {
+        save();
+        return;
+    }
+
+    QTextEdit::keyPressEvent(event);
+}
+
+void MarkdownEditor::insertFromMimeData(const QMimeData *source)
+{
+    QImage image;
+
+    if (source->hasImage()) {
+        image = qvariant_cast<QImage>(source->imageData());
+    } else if (source->hasUrls()) {
+        const QList<QUrl> urls = source->urls();
+        for (const QUrl &url : urls) {
+            if (!url.isLocalFile()) continue;
+            QString localPath = url.toLocalFile();
+            QImageReader reader(localPath);
+            if (reader.canRead()) {
+                image = reader.read();
+                if (!image.isNull()) break;
+            }
+        }
+    }
+
+    if (!image.isNull()) {
+        QString fileName = QDateTime::currentDateTime().toString("yyyyMMdd_HHmmss_zzz") + ".png";
+        QString filePath = m_pasteDir + "/" + fileName;
+        if (image.save(filePath)) {
+            QTextCursor cursor = textCursor();
+            cursor.beginEditBlock();
+            cursor.insertBlock();
+
+            QTextImageFormat imageFormat;
+            imageFormat.setName(filePath);
+            int maxWidth = viewport()->width() - 48;
+            if (image.width() > maxWidth) {
+                imageFormat.setWidth(maxWidth);
+                imageFormat.setHeight(image.height() * maxWidth / image.width());
+            } else {
+                imageFormat.setWidth(image.width());
+                imageFormat.setHeight(image.height());
+            }
+            document()->addResource(QTextDocument::ImageResource, QUrl::fromLocalFile(filePath), image);
+            cursor.insertImage(imageFormat);
+
+            cursor.insertBlock();
+            cursor.endEditBlock();
+        }
+        return;
+    }
+
+    QTextEdit::insertFromMimeData(source);
 }

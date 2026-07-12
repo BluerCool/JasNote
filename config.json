@@ -1,0 +1,76 @@
+{
+  "window": {
+    "minWidth": 900,
+    "minHeight": 600,
+    "defaultWidth": 1100,
+    "defaultHeight": 750,
+    "opacity": 0.25,
+    "radius": 16,
+    "layoutMargin": 16,
+    "borderWidth": 2,
+    "borderAlphaBase": 153,
+    "bg1": [18, 22, 30],
+    "bg2": [22, 28, 38],
+    "bg3": [16, 20, 28]
+  },
+  "statusBar": {
+    "fontSize": 15,
+    "font": "Cascadia Code, Fira Code, monospace",
+    "color": "black",
+    "modifiedColor": "#ff6b9d",
+    "modifiedFontSize": 18,
+    "x": 20,
+    "yOffset": 36,
+    "width": 500,
+    "height": 20,
+    "marginLeft": 4
+  },
+  "editor": {
+    "fontSize": 14,
+    "font": "Cascadia Code, Fira Code, JetBrains Mono, monospace",
+    "textColor": "#d4d4dc",
+    "selectionBg": "#2a6f6f",
+    "padding": 16,
+    "tabStop": 40,
+    "autosaveMs": 0
+  },
+  "dialog": {
+    "width": 440,
+    "height": 180,
+    "bgAlpha": 242,
+    "radius": 16,
+    "borderAlpha": 160,
+    "borderWidth": 2,
+    "marginLeft": 28,
+    "marginTop": 24,
+    "marginRight": 28,
+    "marginBottom": 20,
+    "titleColor": "#d4d4dc",
+    "titleFontSize": 15
+  },
+  "dialogButtons": {
+    "width": 110,
+    "height": 34,
+    "radius": 8,
+    "fontSize": 13,
+    "textColor": "#d4d4dc",
+    "cancelBg": "rgba(255,255,255,0.06)",
+    "cancelHover": "rgba(255,255,255,0.12)",
+    "dontSaveBg": "rgba(200,60,60,0.35)",
+    "dontSaveHover": "rgba(200,60,60,0.55)",
+    "saveBg": "rgba(78,201,176,0.3)",
+    "saveHover": "rgba(78,201,176,0.5)"
+  },
+  "titleBar": {
+    "height": 36,
+    "title": "JasNote",
+    "font": "Cascadia Code, Fira Code, monospace",
+    "fontSize": 13,
+    "color": "rgba(255,255,255,0.7)",
+    "buttonSize": 36,
+    "buttonFontSize": 14,
+    "buttonColor": "rgba(255,255,255,0.6)",
+    "buttonHover": "rgba(255,255,255,0.1)",
+    "closeButtonHover": "rgba(220,50,50,0.8)"
+  }
+}
