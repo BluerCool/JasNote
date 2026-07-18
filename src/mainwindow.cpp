@@ -23,14 +23,18 @@ bool MainWindow::isTilingWM()
 MainWindow::MainWindow(const QString &filePath, QWidget *parent)
     : QMainWindow(parent)
 {
+    m_customChrome = !isTilingWM();
+
     setAttribute(Qt::WA_TranslucentBackground);
     setAttribute(Qt::WA_NoSystemBackground);
     setAutoFillBackground(false);
-    setWindowFlags(Qt::FramelessWindowHint);
+
+    if (m_customChrome) {
+        setWindowFlags(Qt::FramelessWindowHint);
+    }
+
     setMinimumSize(S::WIN_MIN_W, S::WIN_MIN_H);
     resize(S::WIN_DEFAULT_W, S::WIN_DEFAULT_H);
-
-    m_customChrome = (QSysInfo::productType() == "windows");
 
     auto *central = new QWidget(this);
     central->setObjectName("centralContainer");

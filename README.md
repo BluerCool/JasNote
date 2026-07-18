@@ -1,8 +1,8 @@
 <div align="center">
 
-# ✨ JasNote ✨
+# JasNote
 
-### *A Markdown editor so transparent, it has trust issues.*
+### A Markdown editor so transparent, it has trust issues.
 
 **WYSIWYG Markdown editing — no split pane, no preview pane, no nonsense.**
 
@@ -16,34 +16,36 @@
 
 ## What is this sorcery?
 
-JasNote is a lightweight WYSIWYG Markdown note editor built with Qt 6. You type Markdown, and it renders inline — **live, as you type**. No split pane. No "Source" tab. No toggling between raw text and preview like some kind of animal.
+JasNote is a lightweight WYSIWYG Markdown note editor built with Qt 6. You type Markdown, and it renders inline — live, as you type. No split pane. No "Source" tab. No toggling between raw text and preview like some kind of animal.
 
-It also looks *really* good doing it. The window is a **translucent glassmorphism** frame — you can literally see your desktop through it. Is it a productivity tool or a privacy risk? Yes.
+It also looks **really** good doing it. The window is a translucent glassmorphism frame — you can literally see your desktop through it. Is it a productivity tool or a privacy risk? Yes.
 
 ## Features
 
 | Feature | What it does |
 |---------|-------------|
 | **Live WYSIWYG Editing** | Type `# Heading` and boom — it's a heading. Type `**bold**` and it's bold. Everything renders inline, no preview needed. |
-| **Image Paste (`Ctrl+V`)** | Paste images from your clipboard. They're saved to `pastes/` and displayed inline. Screenshot warriors, this is your moment. |
+| **Full CommonMark + GFM** | Powered by [cmark-gfm](https://github.com/github/cmark-gfm) (the reference CommonMark implementation). Tables, strikethrough, task lists, autolinks — all supported. |
+| **Image Paste (Ctrl+V)** | Paste images from your clipboard. They're saved to `pastes/` and displayed inline. Screenshot warriors, this is your moment. |
 | **Drag & Drop Images** | Drag image files straight into the editor. It just works. Like it should. |
 | **Glassmorphism Window** | The window is translucent with rounded corners. You can see your desktop behind it. Spooky? A little. Cool? Absolutely. |
-| **Auto-Save** | Saves to `markdowns/note.md` automatically (800ms debounce). Because losing notes is a crime. |
-| **Manual Save (`Ctrl+S`)** | For the control freaks. We respect that. |
+| **Auto-Save** | Saves to `markdowns/note.md` automatically. Because losing notes is a crime. |
+| **Manual Save (Ctrl+S)** | For the control freaks. We respect that. |
 | **Tab = 4 Spaces** | Tab inserts 4 spaces. Not a tab character. This is the hill we chose to die on. |
 | **Glass Exit Dialog** | When you try to close with unsaved changes, a frosted glass dialog appears asking "Save? Don't Save? Cancel?" Very fancy. |
-| **Platform-Aware** | Windows gets custom chrome (rounded corners + title bar). Tiling WMs (niri, sway, i3, Hyprland) skip the decorations because your WM already handles that. |
+| **Custom Chrome (All Platforms)** | Every platform gets rounded corners and a custom title bar (minimize/maximize/close). You get the full glassmorphism experience everywhere. |
 | **Fully Configurable** | Every pixel, every color, every font, every margin — configurable via `config.json`. You have been given too much power. |
 
 ## The "No Split Pane" Philosophy
 
-Most Markdown editors give you two panes: one with raw text, one with rendered output. JasNote said "what if we just... didn't?" You type Markdown. It renders. Right there. In the same spot. Like magic, but with fewer hat tricks and more `QTextEdit` subclassing.
+Most Markdown editors give you two panes: one with raw text, one with rendered output. JasNote said "what if we just... didn't?" You type Markdown. It renders. Right there. In the same spot. Like magic, but with fewer hat tricks and more `QTextEdit` subclassing. Under the hood, [cmark-gfm](https://github.com/github/cmark-gfm) parses Markdown into an AST, and a custom converter maps it to `QTextDocument` rich text — full CommonMark + GFM support without a split pane.
 
 ## Requirements
 
-- **Qt 6.5+** (required for `QTextDocument::toMarkdown()`)
+- **Qt 6.5+**
 - **CMake 3.21+**
 - **C++17 compiler** (GCC, Clang, MSVC — we don't judge)
+- cmark-gfm is fetched automatically via CMake FetchContent (no manual install needed)
 
 ## Build from Source
 
@@ -71,7 +73,7 @@ If the window appears and you can see your desktop wallpaper through it, congrat
 | `Ctrl+V` | Paste image from clipboard |
 | `Ctrl+S` | Save note to `markdowns/note.md` |
 | `Tab` | Insert 4 spaces |
-| `Drag & Drop` | Drop image files into the editor |
+| Drag & Drop | Drop image files into the editor |
 | Close window | Triggers glass "Save?" dialog (if modified) |
 
 **File locations** (relative to the executable):
@@ -93,8 +95,9 @@ JasNote/
 │   ├── main.cpp                # Entry point — where it all begins
 │   ├── mainwindow.cpp/h        # Frameless window with glassmorphism painting
 │   ├── markdowneditor.cpp/h    # WYSIWYG Markdown editor (QTextEdit subclass)
+│   ├── markdownconverter.cpp/h # cmark-gfm AST → QTextDocument renderer
 │   ├── glassdialog.cpp/h       # Frosted glass "Save?" confirmation dialog
-│   ├── titlebar.cpp/h          # Custom title bar (Windows)
+│   ├── titlebar.cpp/h          # Custom title bar (all platforms)
 │   ├── config.cpp              # JSON config loader
 │   ├── settings.h              # All UI defaults live here (S namespace)
 │   └── fluentui/               # FluentUI glassmorphism styling
@@ -119,7 +122,7 @@ JasNote is configured via `config.json`. Only specify the values you want to ove
 | `defaultWidth` | int | `1100` | Default window width |
 | `defaultHeight` | int | `750` | Default window height |
 | `opacity` | double | `0.25` | Background opacity (0–1, lower = more see-through) |
-| `radius` | int | `16` | Window corner radius (px, Windows only) |
+| `radius` | int | `16` | Window corner radius (px) |
 | `layoutMargin` | int | `16` | Content area padding (px) |
 | `borderWidth` | int | `2` | Window border width (px) |
 | `borderAlphaBase` | int | `153` | Border base opacity |
@@ -152,7 +155,7 @@ JasNote is configured via `config.json`. Only specify the values you want to ove
 | `selectionBg` | string | `"#2a6f6f"` | Selection background color |
 | `padding` | int | `16` | Editor padding (px) |
 | `tabStop` | int | `40` | Tab width (px) |
-| `autosaveMs` | int | `800` | Auto-save debounce (ms) |
+| `autosaveMs` | int | `0` | Auto-save debounce (ms, 0 = disabled) |
 
 ### `dialog` — Glass Exit Dialog
 
@@ -187,7 +190,7 @@ JasNote is configured via `config.json`. Only specify the values you want to ove
 | `saveBg` | string | `"rgba(78,201,176,0.3)"` | Save background (teal) |
 | `saveHover` | string | `"rgba(78,201,176,0.5)"` | Save hover |
 
-### `titleBar` — Custom Title Bar (Windows Only)
+### `titleBar` — Custom Title Bar
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
@@ -221,18 +224,12 @@ JasNote is configured via `config.json`. Only specify the values you want to ove
 
 ## Platform Behavior
 
-| Environment | Rounded Corners | Custom Title Bar | Detection |
-|-------------|----------------|------------------|-----------|
-| Windows | Yes | Yes (minimize/maximize/close) | `QSysInfo::productType() == "windows"` |
-| Tiling WM (niri, sway, i3, Hyprland) | No | No | Env vars: `NIRI_SOCKET`, `SWAYSOCK`, `I3SOCK`, `HYPRLAND_INSTANCE_SIGNATURE` |
-| Other Linux (GNOME, KDE, etc.) | No | No | Default |
+All platforms get rounded corners and a custom title bar (minimize/maximize/close). Full glassmorphism everywhere.
 
-Your desktop environment already handles window decorations, so JasNote gracefully steps aside. It's polite like that.
+## Why JasNote?
 
-## Why "JasNote"?
-
-Because "Jas" and "Note" are two words, and we smashed them together. It's not deep. The editor, however, is — deep enough to render your Markdown beautifully while you see your desktop wallpaper staring back at you through the translucent glass. 
+It can render your Markdown beautifully while you see your desktop wallpaper staring back at you through the translucent glass.
 
 ## License
 
-[MIT](LICENSE) — do whatever you want with it, just don't blame us when you spend 20 minutes staring at your window transparency instead of writing notes.
+**MIT** — do whatever you want with it, just don't blame us when you spend 20 minutes staring at your window transparency instead of writing notes.

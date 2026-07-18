@@ -25,25 +25,26 @@ JasNote 是一款基于 Qt 6 的轻量级 WYSIWYG Markdown 笔记编辑器。你
 | 功能 | 做了什么 |
 |------|---------|
 | **实时 WYSIWYG 编辑** | 输入 `# 标题`，砰——它就是标题了。输入 `**加粗**`，它就加粗了。一切都在原位渲染，不需要预览。 |
+| **完整 CommonMark + GFM** | 基于 [cmark-gfm](https://github.com/github/cmark-gfm)（CommonMark 参考实现）。表格、删除线、任务列表、自动链接——全部支持。 |
 | **图片粘贴 (`Ctrl+V`)** | 从剪贴板粘贴图片，自动保存到 `pastes/` 文件夹并内联显示。截图狂魔们，这是你们的舞台。 |
 | **拖拽图片** | 直接把图片文件拖进编辑器。就这么简单。理应如此。 |
 | **毛玻璃窗口** | 窗口半透明带圆角。你能透过它看到桌面。有点诡异？有一点。酷不酷？绝对酷。 |
-| **自动保存** | 自动保存到 `markdowns/note.md`（800ms 防抖）。因为丢笔记是犯罪。 |
 | **手动保存 (`Ctrl+S`)** | 给控制狂们的。我们尊重你。 |
 | **Tab = 4 空格** | Tab 插入 4 个空格。不是制表符。这是我们选好的高地，死也要守住。 |
 | **毛玻璃退出对话框** | 关闭有未保存修改的窗口时，弹出毛玻璃对话框问你"保存？不保存？取消？"非常高级。 |
-| **平台自适应** | Windows 获得自定义窗口装饰（圆角+标题栏）。平铺式窗口管理器（niri、sway、i3、Hyprland）跳过装饰，因为你的 WM 已经在处理了。 |
+| **自定义窗口装饰（全平台）** | 所有平台都获得圆角和自定义标题栏（最小化/最大化/关闭）。全面的毛玻璃体验。 |
 | **全面可配置** | 每个像素、每个颜色、每个字体、每个边距 —— 全部通过 `config.json` 配置。你被赋予了太大的权力。 |
 
 ## "不分屏"哲学
 
-大多数 Markdown 编辑器给你两个面板：一个原始文本，一个渲染输出。JasNote 说："如果我们……不分呢？" 你输入 Markdown。它渲染了。就在那里。在同一个地方。像魔法一样，但戏法更少，`QTextEdit` 子类化更多。
+大多数 Markdown 编辑器给你两个面板：一个原始文本，一个渲染输出。JasNote 说："如果我们……不分呢？" 你输入 Markdown。它渲染了。就在那里。在同一个地方。像魔法一样，但戏法更少，`QTextEdit` 子类化更多。底层使用 [cmark-gfm](https://github.com/github/cmark-gfm)（CommonMark 参考实现）将 Markdown 解析为 AST，再通过自定义转换器映射到 `QTextDocument` 富文本——无需分屏即可获得完整的 CommonMark + GFM 支持。
 
 ## 环境要求
 
-- **Qt 6.5+**（`QTextDocument::toMarkdown()` 需要）
+- **Qt 6.5+**
 - **CMake 3.21+**
 - **C++17 编译器**（GCC、Clang、MSVC —— 我们不挑）
+- cmark-gfm 通过 CMake FetchContent 自动下载（无需手动安装）
 
 ## 从源码构建
 
@@ -93,8 +94,9 @@ JasNote/
 │   ├── main.cpp                # 入口点 —— 一切从这里开始
 │   ├── mainwindow.cpp/h        # 无边框窗口 + 毛玻璃绘制
 │   ├── markdowneditor.cpp/h    # WYSIWYG Markdown 编辑器（QTextEdit 子类）
+│   ├── markdownconverter.cpp/h # cmark-gfm AST → QTextDocument 渲染器
 │   ├── glassdialog.cpp/h       # 毛玻璃"保存？"确认对话框
-│   ├── titlebar.cpp/h          # 自定义标题栏（Windows）
+│   ├── titlebar.cpp/h          # 自定义标题栏（全平台）
 │   ├── config.cpp              # JSON 配置加载器
 │   ├── settings.h              # 所有 UI 默认值（S 命名空间）
 │   └── fluentui/               # FluentUI 毛玻璃样式
@@ -119,7 +121,7 @@ JasNote 通过 `config.json` 进行配置。只写你想覆盖的值，其余保
 | `defaultWidth` | int | `1100` | 窗口默认宽度 |
 | `defaultHeight` | int | `750` | 窗口默认高度 |
 | `opacity` | double | `0.25` | 背景透明度（0–1，越小越透明） |
-| `radius` | int | `16` | 窗口圆角半径（px，仅 Windows） |
+| `radius` | int | `16` | 窗口圆角半径（px） |
 | `layoutMargin` | int | `16` | 内容区边距（px） |
 | `borderWidth` | int | `2` | 窗口边框宽度（px） |
 | `borderAlphaBase` | int | `153` | 边框基础透明度 |
@@ -152,7 +154,7 @@ JasNote 通过 `config.json` 进行配置。只写你想覆盖的值，其余保
 | `selectionBg` | string | `"#2a6f6f"` | 选中背景色 |
 | `padding` | int | `16` | 编辑器内边距（px） |
 | `tabStop` | int | `40` | Tab 宽度（px） |
-| `autosaveMs` | int | `800` | 自动保存防抖（ms） |
+| `autosaveMs` | int | `0` | 自动保存防抖（ms，0 = 禁用） |
 
 ### `dialog` —— 毛玻璃退出对话框
 
@@ -187,7 +189,7 @@ JasNote 通过 `config.json` 进行配置。只写你想覆盖的值，其余保
 | `saveBg` | string | `"rgba(78,201,176,0.3)"` | 保存按钮背景（青色） |
 | `saveHover` | string | `"rgba(78,201,176,0.5)"` | 保存按钮悬停 |
 
-### `titleBar` —— 自定义标题栏（仅 Windows）
+### `titleBar` —— 自定义标题栏
 
 | 键 | 类型 | 默认值 | 说明 |
 |----|------|--------|------|
@@ -221,11 +223,7 @@ JasNote 通过 `config.json` 进行配置。只写你想覆盖的值，其余保
 
 ## 平台行为
 
-| 环境 | 圆角 | 自定义标题栏 | 检测方式 |
-|------|------|-------------|---------|
-| Windows | 有 | 有（最小化/最大化/关闭） | `QSysInfo::productType() == "windows"` |
-| 平铺式 WM（niri、sway、i3、Hyprland） | 无 | 无 | 环境变量：`NIRI_SOCKET`、`SWAYSOCK`、`I3SOCK`、`HYPRLAND_INSTANCE_SIGNATURE` |
-| 其他 Linux（GNOME、KDE 等） | 无 | 无 | 默认 |
+所有平台都获得圆角和自定义标题栏（最小化/最大化/关闭）。全面的毛玻璃体验。
 
 你的桌面环境已经在处理窗口装饰了，JasNote 优雅地让位。它就是这么贴心。
 

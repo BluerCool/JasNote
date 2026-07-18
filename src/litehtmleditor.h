@@ -1,43 +1,44 @@
-#pragma once
-#include <QTextEdit>
+#ifndef LITEHTMLEDITOR_H
+#define LITEHTMLEDITOR_H
+
+#include <QWidget>
+#include <QPlainTextEdit>
+#include "litehtmlwidget.h"
 
 class QTimer;
-class QNetworkAccessManager;
 
-class MarkdownEditor : public QTextEdit
+class LiteHtmlEditor : public QWidget
 {
     Q_OBJECT
 public:
-    explicit MarkdownEditor(const QString &filePath = QString(), QWidget *parent = nullptr);
+    explicit LiteHtmlEditor(const QString &filePath = QString(), QWidget *parent = nullptr);
 
     QString toMarkdown() const;
     void setMarkdown(const QString &md);
     void save();
     bool isModified() const { return m_modified; }
-    QString filePath() const;
+    QString filePath() const { return m_filePath; }
     QString fileName() const;
-
-    Q_INVOKABLE bool handlePaste();
 
 signals:
     void textChanged(const QString &text);
     void modificationChanged(bool modified);
 
 protected:
-    void keyPressEvent(QKeyEvent *event) override;
-    void insertFromMimeData(const QMimeData *source) override;
+    void resizeEvent(QResizeEvent *event) override;
 
 private slots:
     void autoSave();
+    void syncPreview();
 
 private:
-    void fetchRemoteImages();
-
+    QPlainTextEdit *m_input;
+    LiteHtmlWidget *m_preview;
     bool m_loading = false;
     bool m_modified = false;
-    QString m_rawMarkdown;
     QString m_pasteDir;
     QString m_filePath;
     QTimer *m_saveTimer;
-    QNetworkAccessManager *m_netManager;
 };
+
+#endif // LITEHTMLEDITOR_H

@@ -1,4 +1,6 @@
 build/
+cmark-gfm/
+litehtml/
 *.o
 *.obj
 *.exe
@@ -6,3 +8,5 @@ moc_*
 qrc_*
 ui_*
 _deps/
+markdowns/
+pastes/

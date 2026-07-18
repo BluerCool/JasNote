@@ -37,7 +37,7 @@ inline QString ED_COLOR       = "#d4d4dc";
 inline QString ED_SEL_BG      = "#2a6f6f";
 inline int    ED_PADDING      = 16;
 inline int    ED_TAB_STOP     = 40;
-inline int    ED_AUTOSAVE_MS  = 800;
+inline int    ED_AUTOSAVE_MS  = 0;
 
 // ── Glass Dialog ────────────────────────────────────────
 inline int    DLG_W           = 440;

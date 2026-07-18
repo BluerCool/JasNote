@@ -1,4 +1,5 @@
 #include "markdowneditor.h"
+#include "markdownconverter.h"
 #include "settings.h"
 #include <QKeyEvent>
 #include <QMimeData>
@@ -18,6 +19,8 @@
 #include <QAbstractTextDocumentLayout>
 #include <QScrollBar>
 #include <QTimer>
+#include <QNetworkAccessManager>
+#include <QNetworkReply>
 
 MarkdownEditor::MarkdownEditor(const QString &filePath, QWidget *parent)
     : QTextEdit(parent)
@@ -84,6 +87,8 @@ MarkdownEditor::MarkdownEditor(const QString &filePath, QWidget *parent)
     if (S::ED_AUTOSAVE_MS > 0)
         connect(m_saveTimer, &QTimer::timeout, this, &MarkdownEditor::autoSave);
 
+    m_netManager = new QNetworkAccessManager(this);
+
     QFile file(m_filePath);
     if (file.exists() && file.open(QIODevice::ReadOnly | QIODevice::Text)) {
         QString content = QString::fromUtf8(file.readAll());
@@ -108,18 +113,16 @@ MarkdownEditor::MarkdownEditor(const QString &filePath, QWidget *parent)
 
 QString MarkdownEditor::toMarkdown() const
 {
-    QString md = document()->toMarkdown();
-    while (md.endsWith('\n')) {
-        md.chop(1);
-    }
-    return md;
+    return MarkdownConverter::documentToMarkdown(document());
 }
 
 void MarkdownEditor::setMarkdown(const QString &md)
 {
     m_loading = true;
-    document()->setMarkdown(md);
+    m_rawMarkdown = md;
+    MarkdownConverter::renderToDocument(md, document());
     m_loading = false;
+    fetchRemoteImages();
 }
 
 void MarkdownEditor::save()
@@ -127,7 +130,9 @@ void MarkdownEditor::save()
     QDir().mkpath(QFileInfo(m_filePath).absolutePath());
     QFile file(m_filePath);
     if (file.open(QIODevice::WriteOnly | QIODevice::Text)) {
-        file.write(toMarkdown().toUtf8());
+        QString md = MarkdownConverter::documentToMarkdown(document());
+        while (md.endsWith('\n')) md.chop(1);
+        file.write(md.toUtf8());
         file.close();
     }
     if (m_modified) {
@@ -227,4 +232,55 @@ void MarkdownEditor::insertFromMimeData(const QMimeData *source)
     }
 
     QTextEdit::insertFromMimeData(source);
+}
+
+void MarkdownEditor::fetchRemoteImages()
+{
+    QTextBlock block = document()->begin();
+    while (block.isValid()) {
+        for (QTextBlock::iterator it = block.begin(); !it.atEnd(); ++it) {
+            QTextFragment frag = it.fragment();
+            if (!frag.isValid()) continue;
+            QTextImageFormat imgFmt = frag.charFormat().toImageFormat();
+            if (!imgFmt.isValid()) continue;
+
+            QString name = imgFmt.name();
+            QUrl url(name);
+            if (!url.scheme().startsWith("http")) continue;
+
+            QVariant res = document()->resource(QTextDocument::ImageResource, url);
+            if (res.isValid() && res.typeId() == QMetaType::QImage && !res.value<QImage>().isNull())
+                continue;
+
+            QNetworkReply *reply = m_netManager->get(QNetworkRequest(url));
+            connect(reply, &QNetworkReply::finished, this, [this, url, reply]() {
+                reply->deleteLater();
+                if (reply->error() != QNetworkReply::NoError) return;
+                QImage img;
+                img.loadFromData(reply->readAll());
+                if (img.isNull()) return;
+                document()->addResource(QTextDocument::ImageResource, url, img);
+                QTextCursor cursor(document());
+                cursor.beginEditBlock();
+                QTextBlock blk = document()->begin();
+                while (blk.isValid()) {
+                    for (QTextBlock::iterator it = blk.begin(); !it.atEnd(); ++it) {
+                        QTextFragment frag = it.fragment();
+                        if (!frag.isValid()) continue;
+                        QTextImageFormat fmt = frag.charFormat().toImageFormat();
+                        if (fmt.isValid() && fmt.name() == url.toString()) {
+                            cursor.setPosition(frag.position());
+                            cursor.movePosition(QTextCursor::NextCharacter, QTextCursor::KeepAnchor);
+                            QTextImageFormat newFmt = fmt;
+                            cursor.removeSelectedText();
+                            cursor.insertImage(newFmt);
+                        }
+                    }
+                    blk = blk.next();
+                }
+                cursor.endEditBlock();
+            });
+        }
+        block = block.next();
+    }
 }
