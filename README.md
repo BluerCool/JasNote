@@ -2,7 +2,7 @@
 
 # JasNote
 
-### A Markdown editor so transparent, it has trust issues.
+### A Markdown editor and reader so transparent, it has trust issues.
 
 **WYSIWYG Markdown editing — no split pane, no preview pane, no nonsense.**
 
