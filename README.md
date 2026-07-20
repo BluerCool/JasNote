@@ -53,7 +53,7 @@ Clone dependencies first:
 
 ```bash
 git clone https://github.com/github/cmark-gfm.git
-git clone https://github.com/nicedoc/litehtml.git
+git clone https://github.com/litehtml/litehtml.git
 ```
 
 Then build:
