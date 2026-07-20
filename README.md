@@ -45,9 +45,18 @@ Most Markdown editors give you two panes: one with raw text, one with rendered o
 - **Qt 6.5+**
 - **CMake 3.21+**
 - **C++17 compiler** (GCC, Clang, MSVC — we don't judge)
-- cmark-gfm is fetched automatically via CMake FetchContent (no manual install needed)
+- cmark-gfm and litehtml (clone into project root)
 
 ## Build from Source
+
+Clone dependencies first:
+
+```bash
+git clone https://github.com/github/cmark-gfm.git
+git clone https://github.com/nicedoc/litehtml.git
+```
+
+Then build:
 
 ```bash
 git clone https://github.com/BluerCool/JasNote.git
