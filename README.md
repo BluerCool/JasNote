@@ -63,7 +63,7 @@ git clone https://github.com/BluerCool/JasNote.git
 cd JasNote
 mkdir build && cd build
 cmake ..
-cmake --build . -j$(nproc)
+cmake --build .
 ```
 
 ## Run
