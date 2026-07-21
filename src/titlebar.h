@@ -14,8 +14,10 @@ protected:
     void mousePressEvent(QMouseEvent *event) override;
     void mouseMoveEvent(QMouseEvent *event) override;
     void mouseDoubleClickEvent(QMouseEvent *event) override;
+    void changeEvent(QEvent *event) override;
 
 private:
+    void updateMaxButton();
     QLabel *m_title;
     QPushButton *m_minBtn;
     QPushButton *m_maxBtn;

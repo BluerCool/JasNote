@@ -4,6 +4,50 @@
 #include <QPushButton>
 #include <QHBoxLayout>
 #include <QMouseEvent>
+#include <QEvent>
+#include <QPainter>
+#include <QSvgRenderer>
+
+static QByteArray svgMinimize()
+{
+    return R"(<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20">)"
+           R"(<rect x="4" y="9" width="12" height="1.5" rx="0.75" fill="white"/>)"
+           R"(</svg>)";
+}
+
+static QByteArray svgMaximize()
+{
+    return R"(<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20">)"
+           R"(<rect x="4" y="4" width="12" height="12" rx="1.5" fill="none" stroke="white" stroke-width="1.4"/>)"
+           R"(</svg>)";
+}
+
+static QByteArray svgRestore()
+{
+    return R"(<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20">)"
+           R"(<rect x="2" y="5.5" width="10" height="10" rx="1.5" fill="#1a1e28" stroke="white" stroke-width="1.3"/>)"
+           R"(<rect x="7" y="2.5" width="10" height="10" rx="1.5" fill="#1a1e28" stroke="white" stroke-width="1.3"/>)"
+           R"(</svg>)";
+}
+
+static QByteArray svgClose()
+{
+    return R"(<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20">)"
+           R"(<line x1="5.5" y1="5.5" x2="14.5" y2="14.5" stroke="white" stroke-width="1.4" stroke-linecap="round"/>)"
+           R"(<line x1="14.5" y1="5.5" x2="5.5" y2="14.5" stroke="white" stroke-width="1.4" stroke-linecap="round"/>)"
+           R"(</svg>)";
+}
+
+static QPixmap renderSvg(const QByteArray &svg, int size)
+{
+    QSvgRenderer renderer(svg);
+    QPixmap pixmap(size, size);
+    pixmap.fill(Qt::transparent);
+    QPainter painter(&pixmap);
+    painter.setRenderHint(QPainter::Antialiasing);
+    renderer.render(&painter);
+    return pixmap;
+}
 
 TitleBar::TitleBar(QWidget *parent)
     : QWidget(parent)
@@ -23,31 +67,32 @@ TitleBar::TitleBar(QWidget *parent)
     layout->addWidget(m_title);
     layout->addStretch();
 
-    auto makeBtn = [](const QString &text, const QString &name, const QString &hoverColor) -> QPushButton* {
-        auto *btn = new QPushButton(text);
-        btn->setObjectName(name);
+    auto makeBtn = [](const QString &objName, const QByteArray &svg, const QString &hoverBg) -> QPushButton* {
+        auto *btn = new QPushButton;
+        btn->setObjectName(objName);
         btn->setFixedSize(S::TB_BTN_SIZE, S::TB_BTN_SIZE);
         btn->setCursor(Qt::PointingHandCursor);
+        btn->setIcon(QIcon(renderSvg(svg, S::TB_BTN_ICON)));
+        btn->setIconSize(QSize(S::TB_BTN_ICON, S::TB_BTN_ICON));
         btn->setStyleSheet(
             QString(
                 "QPushButton {"
-                "  color: %1;"
                 "  background: transparent;"
                 "  border: none;"
-                "  font-size: %2px;"
+                "  border-radius: %1px;"
                 "}"
                 "QPushButton:hover {"
-                "  background: %3;"
-                "  color: white;"
+                "  background: %2;"
                 "}"
-            ).arg(S::TB_BTN_COLOR).arg(S::TB_BTN_FONT).arg(hoverColor)
+            ).arg(S::TB_BTN_SIZE / 2).arg(hoverBg)
         );
         return btn;
     };
 
-    m_minBtn = makeBtn(QString::fromUtf8("\xe2\x94\x80"), "minBtn", S::TB_BTN_HOVER);
-    m_maxBtn = makeBtn(QString::fromUtf8("\xe2\x96\xa1"), "maxBtn", S::TB_BTN_HOVER);
-    m_closeBtn = makeBtn(QString::fromUtf8("\xc3\x97"), "closeBtn", S::TB_BTN_CLOSE_HOVER);
+    m_minBtn = makeBtn("minBtn", svgMinimize(), S::TB_BTN_HOVER);
+    m_maxBtn = makeBtn("maxBtn", svgMaximize(), S::TB_BTN_HOVER);
+    m_closeBtn = makeBtn("closeBtn", svgClose(), S::TB_BTN_CLOSE_HOVER);
+    m_closeBtn->setFixedSize(S::TB_BTN_SIZE + 1, S::TB_BTN_SIZE + 1);
 
     connect(m_minBtn, &QPushButton::clicked, this, [this]() { window()->showMinimized(); });
     connect(m_maxBtn, &QPushButton::clicked, this, [this]() {
@@ -59,6 +104,19 @@ TitleBar::TitleBar(QWidget *parent)
     layout->addWidget(m_minBtn);
     layout->addWidget(m_maxBtn);
     layout->addWidget(m_closeBtn);
+}
+
+void TitleBar::changeEvent(QEvent *event)
+{
+    if (event->type() == QEvent::WindowStateChange)
+        updateMaxButton();
+    QWidget::changeEvent(event);
+}
+
+void TitleBar::updateMaxButton()
+{
+    bool maximized = window() && window()->isMaximized();
+    m_maxBtn->setIcon(QIcon(renderSvg(maximized ? svgRestore() : svgMaximize(), S::TB_BTN_ICON)));
 }
 
 void TitleBar::mousePressEvent(QMouseEvent *event)

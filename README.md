@@ -62,8 +62,8 @@ Then build:
 git clone https://github.com/BluerCool/JasNote.git
 cd JasNote
 mkdir build && cd build
-cmake .. -G "MinGW Makefiles"
-cmake --build .
+cmake ..
+cmake --build . --config Release
 ```
 
 ## Run

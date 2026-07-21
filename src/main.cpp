@@ -18,7 +18,7 @@ int main(int argc, char *argv[])
     }
 
     MainWindow window(filePath);
-    window.setWindowOpacity(0);
+    window.setWindowOpacity(S::WIN_OPACITY);
     window.show();
 
     return app.exec();

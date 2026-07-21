@@ -11,6 +11,9 @@
 #include <QCloseEvent>
 #include <QResizeEvent>
 #include <QSysInfo>
+#ifdef Q_OS_WIN
+#include <windows.h>
+#endif
 
 bool MainWindow::isTilingWM()
 {
@@ -142,4 +145,22 @@ void MainWindow::closeEvent(QCloseEvent *event)
     } else {
         event->accept();
     }
+}
+
+bool MainWindow::nativeEvent(const QByteArray &eventType, void *message, qintptr *result)
+{
+#ifdef Q_OS_WIN
+    if (eventType == "windows_generic_MSG" || eventType == "windows_dispatcher_MSG") {
+        MSG *msg = static_cast<MSG *>(message);
+        if (msg->message == WM_NCHITTEST) {
+            *result = HTCLIENT;
+            return true;
+        }
+    }
+#else
+    Q_UNUSED(eventType);
+    Q_UNUSED(message);
+    Q_UNUSED(result);
+#endif
+    return QMainWindow::nativeEvent(eventType, message, result);
 }

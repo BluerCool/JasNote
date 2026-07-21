@@ -16,7 +16,7 @@ set(LITEHTML_BUILD_TESTING OFF CACHE BOOL "" FORCE)
 set(LITEHTML_ENABLE_LINT OFF CACHE BOOL "" FORCE)
 add_subdirectory(litehtml)
 
-find_package(Qt6 REQUIRED COMPONENTS Widgets Core Gui Network Test)
+find_package(Qt6 REQUIRED COMPONENTS Widgets Core Gui Network Test Svg)
 
 add_executable(jasnote
     src/main.cpp
@@ -33,7 +33,7 @@ target_include_directories(jasnote PRIVATE
     ${CMAKE_BINARY_DIR}/cmark-gfm/src
 )
 target_link_libraries(jasnote PRIVATE
-    Qt6::Widgets Qt6::Core Qt6::Gui Qt6::Network libcmark-gfm-extensions_static libcmark-gfm_static
+    Qt6::Widgets Qt6::Core Qt6::Gui Qt6::Network Qt6::Svg libcmark-gfm-extensions_static libcmark-gfm_static
 )
 install(TARGETS jasnote DESTINATION bin)
 
@@ -52,5 +52,5 @@ target_include_directories(jasnote_test PRIVATE
     ${CMAKE_BINARY_DIR}/cmark-gfm/src
 )
 target_link_libraries(jasnote_test PRIVATE
-    Qt6::Widgets Qt6::Core Qt6::Gui Qt6::Network Qt6::Test libcmark-gfm-extensions_static libcmark-gfm_static
+    Qt6::Widgets Qt6::Core Qt6::Gui Qt6::Network Qt6::Test Qt6::Svg libcmark-gfm-extensions_static libcmark-gfm_static
 )
