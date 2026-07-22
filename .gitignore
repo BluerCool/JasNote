@@ -1,6 +1,5 @@
 build/
 cmark-gfm/
-litehtml/
 *.o
 *.obj
 *.exe

@@ -12,10 +12,6 @@ set(CMARK_TESTS OFF CACHE BOOL "" FORCE)
 set(CMARK_BIN_DIR ${CMAKE_BINARY_DIR}/cmark_bin)
 add_subdirectory(cmark-gfm)
 
-set(LITEHTML_BUILD_TESTING OFF CACHE BOOL "" FORCE)
-set(LITEHTML_ENABLE_LINT OFF CACHE BOOL "" FORCE)
-add_subdirectory(litehtml)
-
 find_package(Qt6 REQUIRED COMPONENTS Widgets Core Gui Network Test Svg)
 
 add_executable(jasnote

@@ -43,7 +43,7 @@ JasNote 是一款基于 Qt 6 的轻量级 WYSIWYG Markdown 笔记编辑器。你
 
 - **Qt 6.5+**
 - **CMake 3.21+**
-- **C++17 编译器**（GCC、Clang、MSVC —— 我们不挑）
+- **C++17 编译器**
 - cmark-gfm 通过 CMake FetchContent 自动下载（无需手动安装）
 
 ## 从源码构建
@@ -51,7 +51,8 @@ JasNote 是一款基于 Qt 6 的轻量级 WYSIWYG Markdown 笔记编辑器。你
 ```bash
 git clone https://github.com/BluerCool/JasNote.git
 cd JasNote
-mkdir build && cd build
+mkdir build
+cd build
 cmake ..
 cmake --build . -j$(nproc)
 ```
@@ -112,97 +113,6 @@ JasNote 通过 `config.json` 进行配置。只写你想覆盖的值，其余保
 1. `~/.config/jasnote/config.json`（推荐 —— 全局）
 2. `./config.json`（本地 —— 开发用）
 
-### `window` —— 主窗口
-
-| 键 | 类型 | 默认值 | 说明 |
-|----|------|--------|------|
-| `minWidth` | int | `900` | 窗口最小宽度 |
-| `minHeight` | int | `600` | 窗口最小高度 |
-| `defaultWidth` | int | `1100` | 窗口默认宽度 |
-| `defaultHeight` | int | `750` | 窗口默认高度 |
-| `opacity` | double | `0.25` | 背景透明度（0–1，越小越透明） |
-| `radius` | int | `16` | 窗口圆角半径（px） |
-| `layoutMargin` | int | `16` | 内容区边距（px） |
-| `borderWidth` | int | `2` | 窗口边框宽度（px） |
-| `borderAlphaBase` | int | `153` | 边框基础透明度 |
-| `bg1` | [R,G,B] | `[18,22,30]` | 渐变起始色（左上） |
-| `bg2` | [R,G,B] | `[22,28,38]` | 渐变中间色 |
-| `bg3` | [R,G,B] | `[16,20,28]` | 渐变结束色（右下） |
-
-### `statusBar` —— 状态标签（左下角）
-
-| 键 | 类型 | 默认值 | 说明 |
-|----|------|--------|------|
-| `fontSize` | int | `15` | 字号（px） |
-| `font` | string | `"Cascadia Code, Fira Code, monospace"` | 字体 |
-| `color` | string | `"black"` | 文字颜色 |
-| `modifiedColor` | string | `"#ff6b9d"` | 未保存指示器颜色（粉色） |
-| `modifiedFontSize` | int | `18` | 未保存指示器字号（px） |
-| `x` | int | `20` | 左边距（px） |
-| `yOffset` | int | `36` | 距窗口底部偏移（px） |
-| `width` | int | `500` | 标签宽度（px） |
-| `height` | int | `20` | 标签高度（px） |
-| `marginLeft` | int | `4` | 文字左内边距（px） |
-
-### `editor` —— Markdown 编辑器
-
-| 键 | 类型 | 默认值 | 说明 |
-|----|------|--------|------|
-| `fontSize` | int | `14` | 字号（px） |
-| `font` | string | `"Cascadia Code, Fira Code, JetBrains Mono, monospace"` | 字体 |
-| `textColor` | string | `"#d4d4dc"` | 文字颜色 |
-| `selectionBg` | string | `"#2a6f6f"` | 选中背景色 |
-| `padding` | int | `16` | 编辑器内边距（px） |
-| `tabStop` | int | `40` | Tab 宽度（px） |
-| `autosaveMs` | int | `0` | 自动保存防抖（ms，0 = 禁用） |
-
-### `dialog` —— 毛玻璃退出对话框
-
-| 键 | 类型 | 默认值 | 说明 |
-|----|------|--------|------|
-| `width` | int | `440` | 对话框宽度（px） |
-| `height` | int | `180` | 对话框高度（px） |
-| `bgAlpha` | int | `242` | 背景透明度（0–255） |
-| `radius` | int | `16` | 圆角半径（px） |
-| `borderAlpha` | int | `160` | 边框透明度（0–255） |
-| `borderWidth` | int | `2` | 边框宽度（px） |
-| `marginLeft` | int | `28` | 左内边距（px） |
-| `marginTop` | int | `24` | 上内边距（px） |
-| `marginRight` | int | `28` | 右内边距（px） |
-| `marginBottom` | int | `20` | 下内边距（px） |
-| `titleColor` | string | `"#d4d4dc"` | 标题文字颜色 |
-| `titleFontSize` | int | `15` | 标题字号（px） |
-
-### `dialogButtons` —— 对话框按钮（取消 / 不保存 / 保存）
-
-| 键 | 类型 | 默认值 | 说明 |
-|----|------|--------|------|
-| `width` | int | `110` | 按钮宽度（px） |
-| `height` | int | `34` | 按钮高度（px） |
-| `radius` | int | `8` | 按钮圆角半径（px） |
-| `fontSize` | int | `13` | 按钮字号（px） |
-| `textColor` | string | `"#d4d4dc"` | 按钮文字颜色 |
-| `cancelBg` | string | `"rgba(255,255,255,0.06)"` | 取消按钮背景 |
-| `cancelHover` | string | `"rgba(255,255,255,0.12)"` | 取消按钮悬停 |
-| `dontSaveBg` | string | `"rgba(200,60,60,0.35)"` | 不保存按钮背景（红色） |
-| `dontSaveHover` | string | `"rgba(200,60,60,0.55)"` | 不保存按钮悬停 |
-| `saveBg` | string | `"rgba(78,201,176,0.3)"` | 保存按钮背景（青色） |
-| `saveHover` | string | `"rgba(78,201,176,0.5)"` | 保存按钮悬停 |
-
-### `titleBar` —— 自定义标题栏
-
-| 键 | 类型 | 默认值 | 说明 |
-|----|------|--------|------|
-| `height` | int | `36` | 标题栏高度（px） |
-| `title` | string | `"JasNote"` | 标题文字 |
-| `font` | string | `"Cascadia Code, Fira Code, monospace"` | 字体 |
-| `fontSize` | int | `13` | 字号（px） |
-| `color` | string | `"rgba(255,255,255,0.7)"` | 标题文字颜色 |
-| `buttonSize` | int | `36` | 按钮尺寸（px） |
-| `buttonFontSize` | int | `14` | 按钮图标字号（px） |
-| `buttonColor` | string | `"rgba(255,255,255,0.6)"` | 按钮颜色 |
-| `buttonHover` | string | `"rgba(255,255,255,0.1)"` | 最小化/最大化悬停色 |
-| `closeButtonHover` | string | `"rgba(220,50,50,0.8)"` | 关闭按钮悬停色（红色） |
 
 ### 配置示例 `config.json`
 
@@ -221,16 +131,6 @@ JasNote 通过 `config.json` 进行配置。只写你想覆盖的值，其余保
 }
 ```
 
-## 平台行为
-
-所有平台都获得圆角和自定义标题栏（最小化/最大化/关闭）。全面的毛玻璃体验。
-
-你的桌面环境已经在处理窗口装饰了，JasNote 优雅地让位。它就是这么贴心。
-
-## 为什么叫 "JasNote"？
-
-因为 "Jas" 和 "Note" 是两个词，我们把它们拼在一起了。没有深意。但编辑器本身有深度 —— 深到能漂亮地渲染你的 Markdown，同时让你透过半透明玻璃看到自己的桌面壁纸在盯着你看。
-
 ## 开源协议
 
-[MIT](LICENSE) —— 随便用，只是别怪我们让你花 20 分钟盯着窗口透明度看而不是写笔记。
+[MIT](LICENSE) 
