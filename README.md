@@ -4,6 +4,8 @@ A WYSIWYG Markdown editor built with Qt 6.
 
 Read and edit Markdown with ease.
 
+[中文文档](README_zh.md)
+
 ## Requirements
 
 - Qt 6.5+
